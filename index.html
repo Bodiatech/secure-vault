@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Secure Vault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h2>🔐 Secure Vault</h2>
+
+<!-- Unlock -->
+<input type="password" id="master" placeholder="Master Password">
+<button onclick="unlock()">Unlock</button>
+
+<hr>
+
+<!-- Save Credentials -->
+<input id="site" placeholder="Website / App">
+<input id="username" placeholder="Username / Email">
+<input id="password" placeholder="Password">
+<select id="category">
+  <option>General</option>
+  <option>Bank</option>
+  <option>Email</option>
+  <option>Work</option>
+  <option>Social</option>
+</select>
+
+<br><br>
+
+<button onclick="generatePassword()">Generate Strong Password</button>
+<button onclick="saveCredential()">Save Credential</button>
+
+<p id="msg"></p>
+
+<script src="crypto.js"></script>
+<script src="sheet.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
+
+<hr>
+<button onclick="loadVault()">🔍 View Vault</button>
+<div id="vault"></div>
+
+<br><br>
+<input id="search" placeholder="Search website or username">
+<select id="filterCategory">
+  <option value="">All</option>
+  <option>Bank</option>
+  <option>Email</option>
+  <option>Work</option>
+  <option>Social</option>
+</select>
+<button onclick="loadVault()">Apply</button>
+<input type="hidden" id="editingId">
+
