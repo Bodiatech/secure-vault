@@ -1,4 +1,5 @@
-const SHEET_API = "https://script.google.com/macros/s/AKfycbzYDZt0k1Jf85q1hOGRU6dG7Q-lEITOnbZhUi77CJGJvrtgdi3NHjpl-hspjkv1xH0/exec";
+const SHEET_API =
+  "https://script.google.com/macros/s/AKfycbzYDZt0k1Jf85q1hOGRU6dG7Q-lEITOnbZhUi77CJGJvrtgdi3NHjpl-hspjkv1xH0/exec";
 
 async function saveToSheet(payload) {
   await fetch(SHEET_API, {
@@ -6,7 +7,8 @@ async function saveToSheet(payload) {
     body: JSON.stringify({ payload })
   });
 }
+
 async function fetchVault() {
   const res = await fetch(SHEET_API);
-  return res.json(); // encrypted array
+  return res.json();
 }

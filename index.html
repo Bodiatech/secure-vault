@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Secure Vault</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
   body {
@@ -15,20 +15,20 @@
   }
 
   .container {
-    max-width: 420px;
+    max-width: 460px;
     margin: auto;
     padding: 20px;
   }
 
   h1 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   input, select, button {
     width: 100%;
     padding: 12px;
-    margin: 8px 0;
+    margin: 6px 0;
     border-radius: 8px;
     border: none;
     background: #1c1f26;
@@ -60,8 +60,9 @@
   }
 
   .meta {
-    font-size: 13px;
-    opacity: 0.8;
+    font-size: 12px;
+    opacity: 0.85;
+    margin-bottom: 6px;
   }
 
   .password {
@@ -104,26 +105,38 @@
 
 <h1>🔐 Secure Vault</h1>
 
-<input type="password" id="master" placeholder="Master Password">
+<input type="password" id="master" placeholder="Master Password" />
 <button onclick="unlock()">Unlock Vault</button>
 
-<hr style="opacity:.2">
+<hr style="opacity:.2" />
 
-<input id="site" placeholder="Website / App">
-<input id="username" placeholder="Username / Email">
-<input id="password" placeholder="Password">
+<input id="site" placeholder="Website / App" />
+<input id="username" placeholder="Username / Email" />
+<input id="password" placeholder="Password" />
+
 <select id="category">
   <option>General</option>
-  <option>Bank</option>
   <option>Email</option>
+  <option>Bank</option>
   <option>Work</option>
   <option>Social</option>
+  <option>Imported</option>
 </select>
 
 <button onclick="generatePassword()">Generate Strong Password</button>
 <button onclick="saveCredential()">Save to Vault</button>
 
-<hr style="opacity:.2">
+<hr style="opacity:.2" />
+
+<input
+  type="text"
+  id="searchBox"
+  placeholder="🔍 Search website, username, password…"
+  oninput="searchVault()"
+/>
+
+<input type="file" id="csvFile" accept=".csv" />
+<button class="secondary" onclick="importCSV()">Import CSV</button>
 
 <button class="secondary" onclick="loadVault()">🔍 View Vault</button>
 
