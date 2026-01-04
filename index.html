@@ -1,54 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <title>Secure Vault</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Secure Vault</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 520px;
-      margin: auto;
-      padding: 12px;
-    }
+<style>
+  body {
+    background: #0f1115;
+    color: #e6e6e6;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
 
-    input, select, button {
-      width: 100%;
-      margin: 6px 0;
-      padding: 8px;
-    }
+  .container {
+    max-width: 420px;
+    margin: auto;
+    padding: 20px;
+  }
 
-    .card {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 10px;
-      margin: 10px 0;
-      background: #fafafa;
-    }
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-    .actions button {
-      width: auto;
-      margin-right: 6px;
-    }
+  input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: none;
+    background: #1c1f26;
+    color: #fff;
+    font-size: 14px;
+  }
 
-    .masked {
-      letter-spacing: 3px;
-    }
-  </style>
+  button {
+    cursor: pointer;
+    background: linear-gradient(135deg, #5a7cff, #8f6bff);
+    font-weight: 600;
+  }
+
+  button.secondary {
+    background: #2a2e38;
+  }
+
+  .card {
+    background: #161922;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 14px 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  }
+
+  .site {
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .meta {
+    font-size: 13px;
+    opacity: 0.8;
+  }
+
+  .password {
+    letter-spacing: 3px;
+    margin: 8px 0;
+  }
+
+  .actions button {
+    width: auto;
+    margin-right: 6px;
+    margin-top: 6px;
+    background: #242836;
+  }
+
+  .spinner {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+  }
+
+  .spinner::after {
+    content: "";
+    width: 32px;
+    height: 32px;
+    border: 3px solid #555;
+    border-top-color: #8f6bff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
 </head>
 
 <body>
+<div class="container">
 
-<h2>🔐 Secure Vault</h2>
+<h1>🔐 Secure Vault</h1>
 
-<!-- Unlock -->
 <input type="password" id="master" placeholder="Master Password">
-<button onclick="unlock()">Unlock</button>
+<button onclick="unlock()">Unlock Vault</button>
 
-<hr>
+<hr style="opacity:.2">
 
-<!-- Save Credentials -->
 <input id="site" placeholder="Website / App">
 <input id="username" placeholder="Username / Email">
 <input id="password" placeholder="Password">
@@ -60,33 +120,20 @@
   <option>Social</option>
 </select>
 
-<br><br>
-
 <button onclick="generatePassword()">Generate Strong Password</button>
-<button onclick="saveCredential()">Save Credential</button>
+<button onclick="saveCredential()">Save to Vault</button>
 
-<p id="msg"></p>
+<hr style="opacity:.2">
+
+<button class="secondary" onclick="loadVault()">🔍 View Vault</button>
+
+<div class="spinner" id="loading"></div>
+<div id="vault"></div>
+
+</div>
 
 <script src="crypto.js"></script>
 <script src="sheet.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
-
-<hr>
-<button onclick="loadVault()">🔍 View Vault</button>
-<div id="vault"></div>
-
-<br><br>
-<input id="search" placeholder="Search website or username">
-<select id="filterCategory">
-  <option value="">All</option>
-  <option>Bank</option>
-  <option>Email</option>
-  <option>Work</option>
-  <option>Social</option>
-</select>
-<button onclick="loadVault()">Apply</button>
-<input type="hidden" id="editingId">
-

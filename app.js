@@ -1,131 +1,171 @@
-let MASTER_PASSWORD = null;
-let autoLockTimer = null;
+/* =========================
+   GLOBAL STATE
+========================= */
 
-/* 🔓 Unlock Vault */
+let MASTER = null;
+let entryBeingEdited = null;
+
+/* =========================
+   UNLOCK VAULT
+========================= */
+
 function unlock() {
   const mp = document.getElementById("master").value;
-  if (!mp) return alert("Enter master password");
-  MASTER_PASSWORD = mp;
-  resetAutoLock();
+  if (!mp) {
+    alert("Enter master password");
+    return;
+  }
+  MASTER = mp;
   alert("Vault unlocked");
 }
 
-/* ⏱ Auto-lock after 2 minutes */
-function resetAutoLock() {
-  clearTimeout(autoLockTimer);
-  autoLockTimer = setTimeout(() => {
-    MASTER_PASSWORD = null;
-    alert("Vault auto-locked");
-  }, 2 * 60 * 1000);
-}
+/* =========================
+   PASSWORD GENERATOR
+========================= */
 
-document.addEventListener("mousemove", resetAutoLock);
-document.addEventListener("keydown", resetAutoLock);
-
-/* 🔐 Password Generator */
 function generatePassword() {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
-  let password = "";
+  let pass = "";
   for (let i = 0; i < 16; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+    pass += chars[Math.floor(Math.random() * chars.length)];
   }
-  document.getElementById("password").value = password;
+  document.getElementById("password").value = pass;
 }
 
-/* 💾 Save Credential */
-async function saveCredential() {
-  if (!MASTER_PASSWORD) return alert("Unlock vault first");
+/* =========================
+   SAVE / UPDATE CREDENTIAL
+========================= */
 
-  const editingId = document.getElementById("editingId").value;
+async function saveCredential() {
+  if (!MASTER) {
+    alert("Unlock vault first");
+    return;
+  }
 
   const entry = {
-  id: crypto.randomUUID(),
-  site: document.getElementById("site").value,
-  username: document.getElementById("username").value,
-  password: document.getElementById("password").value,
-  category: document.getElementById("category").value,
-  deleted: false,
-  updatedAt: new Date().toISOString()
-};
+    id: crypto.randomUUID(),
+    site: document.getElementById("site").value,
+    username: document.getElementById("username").value,
+    password: document.getElementById("password").value,
+    category: document.getElementById("category").value,
+    deleted: false,
+    updatedAt: new Date().toISOString()
+  };
 
   if (!entry.site || !entry.username || !entry.password) {
-    return alert("Fill all required fields");
+    alert("Fill all required fields");
+    return;
   }
 
-  const encryptedPayload = await encryptData(entry, MASTER_PASSWORD);
-  await saveToSheet(encryptedPayload);
+  // If editing, mark old entry as deleted
+  if (entryBeingEdited) {
+    entryBeingEdited.deleted = true;
+    entryBeingEdited.updatedAt = new Date().toISOString();
 
-  document.getElementById("editingId").value = "";
-  document.getElementById("msg").innerText = "✅ Saved securely";
+    const oldEncrypted = await encryptData(entryBeingEdited, MASTER);
+    await saveToSheet(oldEncrypted);
 
-  clearForm();
+    entryBeingEdited = null;
+  }
+
+  const encrypted = await encryptData(entry, MASTER);
+  await saveToSheet(encrypted);
+
+  document.getElementById("site").value = "";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+
+  alert("Saved securely");
 }
 
+/* =========================
+   LOAD VAULT
+========================= */
+
 async function loadVault() {
-  if (!MASTER_PASSWORD) return alert("Unlock vault first");
+  if (!MASTER) {
+    alert("Unlock vault first");
+    return;
+  }
+
+  document.getElementById("loading").style.display = "block";
 
   const encryptedList = await fetchVault();
-  const map = {}; // id → latest entry
+  const vault = document.getElementById("vault");
+  vault.innerHTML = "";
 
   for (const item of encryptedList) {
     try {
-      const data = await decryptData(item, MASTER_PASSWORD);
+      const data = await decryptData(item, MASTER);
       if (data.deleted) continue;
 
+      const div = document.createElement("div");
+      div.className = "card";
 
-      if (
-        !map[data.id] ||
-        new Date(data.updatedAt) > new Date(map[data.id].updatedAt)
-      ) {
-        map[data.id] = data;
-      }
-    } catch {}
+      div.innerHTML = `
+        <div class="site">${data.site}</div>
+        <div class="meta">👤 ${data.username} • 📂 ${data.category}</div>
+
+        <div id="pwd-${data.id}" class="password">••••••••</div>
+
+        <div class="actions">
+          <button onclick="togglePassword('${data.id}', '${data.password}')">👁 Show</button>
+          <button onclick="copyText('${data.password}')">Copy</button>
+          <button onclick='editEntry(${JSON.stringify(data)})'>✏ Edit</button>
+          <button onclick='deleteEntry(${JSON.stringify(data)})'>🗑 Delete</button>
+        </div>
+      `;
+
+      vault.appendChild(div);
+    } catch (e) {
+      console.warn("Failed to decrypt one entry");
+    }
   }
 
-  const container = document.getElementById("vault");
-  container.innerHTML = "";
+  document.getElementById("loading").style.display = "none";
+}
 
-  Object.values(map).forEach(data => {
-    const div = document.createElement("div");
-    div.style.border = "1px solid #ccc";
-    div.style.padding = "8px";
-    div.style.margin = "8px 0";
+/* =========================
+   SHOW / HIDE PASSWORD
+========================= */
 
-    div.className = "card";
+function togglePassword(id, password) {
+  const el = document.getElementById("pwd-" + id);
+  if (!el) return;
 
-div.innerHTML = `
-  <b>${data.site}</b><br>
-  👤 ${data.username}<br>
-  📂 ${data.category}<br>
+  if (el.innerText.startsWith("•")) {
+    el.innerText = password;
+  } else {
+    el.innerText = "••••••••";
+  }
+}
 
-  <div id="pwd-${data.id}" class="masked">••••••••</div>
-
-  <div class="actions">
-    <button onclick="togglePassword('${data.id}', '${data.password}')">👁 Show</button>
-    <button onclick="copyText('${data.password}')">Copy</button>
-    <button onclick='editEntry(${JSON.stringify(data)})'>✏️ Edit</button>
-    <button onclick='deleteEntry(${JSON.stringify(data)})'>🗑 Delete</button>
-  </div>
-`;
+/* =========================
+   COPY TO CLIPBOARD
+========================= */
 
 function copyText(text) {
   navigator.clipboard.writeText(text);
   setTimeout(() => navigator.clipboard.writeText(""), 15000);
 }
-function editEntry(data) {
-  document.getElementById("editingId").value = data.id;
-  document.getElementById("site").value = data.site;
-  document.getElementById("username").value = data.username;
-  document.getElementById("password").value = data.password;
-  document.getElementById("category").value = data.category;
+
+/* =========================
+   EDIT ENTRY
+========================= */
+
+function editEntry(entry) {
+  document.getElementById("site").value = entry.site;
+  document.getElementById("username").value = entry.username;
+  document.getElementById("password").value = entry.password;
+  document.getElementById("category").value = entry.category;
+
+  entryBeingEdited = entry;
 }
-function clearForm() {
-  document.getElementById("site").value = "";
-  document.getElementById("username").value = "";
-  document.getElementById("password").value = "";
-  document.getElementById("category").value = "General";
-}
+
+/* =========================
+   DELETE ENTRY (SOFT DELETE)
+========================= */
 
 async function deleteEntry(entry) {
   if (!confirm("Delete this entry?")) return;
@@ -137,15 +177,4 @@ async function deleteEntry(entry) {
   await saveToSheet(encrypted);
 
   loadVault();
-}
-
-function togglePassword(id, password) {
-  const el = document.getElementById("pwd-" + id);
-  if (!el) return;
-
-  if (el.innerText.startsWith("•")) {
-    el.innerText = password;
-  } else {
-    el.innerText = "••••••••";
-  }
 }
