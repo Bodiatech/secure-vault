@@ -92,21 +92,22 @@ async function loadVault() {
     div.style.padding = "8px";
     div.style.margin = "8px 0";
 
-    div.innerHTML = `
+    div.className = "card";
+
+div.innerHTML = `
   <b>${data.site}</b><br>
   👤 ${data.username}<br>
   📂 ${data.category}<br>
 
-  <button onclick='editEntry(${JSON.stringify(data)})'>✏️ Edit</button>
-  <button onclick='deleteEntry(${JSON.stringify(data)})'>🗑 Delete</button>
-  <button onclick="copyText('${data.username}')">Copy Username</button>
-  <button onclick="copyText('${data.password}')">Copy Password</button>
+  <div id="pwd-${data.id}" class="masked">••••••••</div>
+
+  <div class="actions">
+    <button onclick="togglePassword('${data.id}', '${data.password}')">👁 Show</button>
+    <button onclick="copyText('${data.password}')">Copy</button>
+    <button onclick='editEntry(${JSON.stringify(data)})'>✏️ Edit</button>
+    <button onclick='deleteEntry(${JSON.stringify(data)})'>🗑 Delete</button>
+  </div>
 `;
-
-
-    container.appendChild(div);
-  });
-}
 
 function copyText(text) {
   navigator.clipboard.writeText(text);
@@ -136,4 +137,15 @@ async function deleteEntry(entry) {
   await saveToSheet(encrypted);
 
   loadVault();
+}
+
+function togglePassword(id, password) {
+  const el = document.getElementById("pwd-" + id);
+  if (!el) return;
+
+  if (el.innerText.startsWith("•")) {
+    el.innerText = password;
+  } else {
+    el.innerText = "••••••••";
+  }
 }
