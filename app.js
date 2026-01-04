@@ -40,13 +40,14 @@ async function saveCredential() {
   const editingId = document.getElementById("editingId").value;
 
   const entry = {
-    id: editingId || crypto.randomUUID(),
-    site: document.getElementById("site").value,
-    username: document.getElementById("username").value,
-    password: document.getElementById("password").value,
-    category: document.getElementById("category").value,
-    updatedAt: new Date().toISOString()
-  };
+  id: crypto.randomUUID(),
+  site: document.getElementById("site").value,
+  username: document.getElementById("username").value,
+  password: document.getElementById("password").value,
+  category: document.getElementById("category").value,
+  deleted: false,
+  updatedAt: new Date().toISOString()
+};
 
   if (!entry.site || !entry.username || !entry.password) {
     return alert("Fill all required fields");
@@ -70,6 +71,8 @@ async function loadVault() {
   for (const item of encryptedList) {
     try {
       const data = await decryptData(item, MASTER_PASSWORD);
+      if (data.deleted) continue;
+
 
       if (
         !map[data.id] ||
@@ -90,13 +93,16 @@ async function loadVault() {
     div.style.margin = "8px 0";
 
     div.innerHTML = `
-      <b>${data.site}</b><br>
-      👤 ${data.username}<br>
-      📂 ${data.category}<br>
-      <button onclick='editEntry(${JSON.stringify(data)})'>✏ Edit</button>
-      <button onclick="copyText('${data.username}')">Copy Username</button>
-      <button onclick="copyText('${data.password}')">Copy Password</button>
-    `;
+  <b>${data.site}</b><br>
+  👤 ${data.username}<br>
+  📂 ${data.category}<br>
+
+  <button onclick='editEntry(${JSON.stringify(data)})'>✏️ Edit</button>
+  <button onclick='deleteEntry(${JSON.stringify(data)})'>🗑 Delete</button>
+  <button onclick="copyText('${data.username}')">Copy Username</button>
+  <button onclick="copyText('${data.password}')">Copy Password</button>
+`;
+
 
     container.appendChild(div);
   });
@@ -118,4 +124,16 @@ function clearForm() {
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
   document.getElementById("category").value = "General";
+}
+
+async function deleteEntry(entry) {
+  if (!confirm("Delete this entry?")) return;
+
+  entry.deleted = true;
+  entry.updatedAt = new Date().toISOString();
+
+  const encrypted = await encryptData(entry, MASTER);
+  await saveToSheet(encrypted);
+
+  loadVault();
 }
