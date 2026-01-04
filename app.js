@@ -1,3 +1,22 @@
+(function autoSaveFromExtension() {
+  const params = new URLSearchParams(window.location.search);
+  const auto = params.get("autosave");
+  if (!auto) return;
+
+  const data = JSON.parse(auto);
+
+  window.addEventListener("load", () => {
+    alert("Unlock vault to save login");
+
+    document.getElementById("site").value = data.site;
+    document.getElementById("username").value = data.username;
+    document.getElementById("password").value = data.password;
+    document.getElementById("category").value = "Auto-Saved";
+
+    // User unlocks → clicks Save manually (security)
+  });
+})();
+
 /* =========================
    GLOBAL STATE
 ========================= */
